@@ -416,6 +416,9 @@
   <section id="announcements" class="active">
     <h2>📢 Latest News & Promos</h2>
     <div class="announcements" id="announcementsList"></div>
+    
+    <h2 style="margin-top: 40px;">⭐ Featured Products</h2>
+    <div id="featuredProducts" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;"></div>
   </section>
 
   <!-- Price Lookup Section -->
@@ -432,7 +435,8 @@
   <section id="message">
     <h2>✉️ Send Us a Message</h2>
     <div class="message-form">
-      <form id="contactForm" name="contact" method="POST" netlify>
+      <form id="contactForm" name="contact" method="POST" netlify netlify-honeypot="bot-field" onsubmit="handleFormSubmit(event)">
+        <input type="hidden" name="bot-field">
         <div class="form-group">
           <label>Your Name</label>
           <input type="text" name="name" required placeholder="What's your name?">
@@ -446,6 +450,7 @@
           <textarea name="message" required placeholder="Leave a note, ask a question, or suggest something..."></textarea>
         </div>
         <button type="submit" class="submit-btn">Send Message</button>
+        <div id="formMessage" style="margin-top: 10px; padding: 10px; border-radius: 4px; text-align: center; font-size: 13px; display: none; background: #e8f5e9; color: #2e7d32;">✓ Message sent! We'll get back to you soon.</div>
       </form>
     </div>
 
@@ -473,6 +478,7 @@ function loadData() {
     inventory = data.inventory || [];
   }
   renderAnnouncements();
+  renderFeaturedProducts();
 }
 
 function saveData() {
@@ -509,6 +515,28 @@ function renderAnnouncements() {
   `).join('');
 }
 
+// ========== FEATURED PRODUCTS ==========
+function renderFeaturedProducts() {
+  const featuredDiv = document.getElementById('featuredProducts');
+  
+  if (inventory.length === 0) {
+    featuredDiv.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999; padding: 20px;">Upload inventory to see featured products.</p>';
+    return;
+  }
+  
+  // Show random 6 products or all if less than 6
+  const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5);
+  const featured = shuffle(inventory).slice(0, 6);
+  
+  featuredDiv.innerHTML = featured.map(p => `
+    <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); text-align: center;">
+      <h3 style="font-size: 13px; color: #333; margin-bottom: 8px; line-height: 1.4;">${p.name}</h3>
+      <p style="font-size: 11px; color: #999; margin-bottom: 10px;">${p.category}</p>
+      <div style="font-size: 18px; font-weight: 700; color: #E5358B;">₱${p.price.toFixed(2)}</div>
+    </div>
+  `).join('');
+}
+
 // ========== INVENTORY & PRICES ==========
 function handleCsvUpload(event) {
   const file = event.target.files[0];
@@ -519,7 +547,8 @@ function handleCsvUpload(event) {
     const csv = e.target.result;
     parseCSV(csv);
     saveData();
-    alert('Inventory updated! Go to Price Lookup to see changes.');
+    renderFeaturedProducts();
+    alert('Inventory updated! Featured products now showing.');
     event.target.value = ''; // reset input
   };
   reader.readAsText(file);
@@ -599,6 +628,31 @@ function filterProducts() {
       <div class="product-price">₱${p.price.toFixed(2)}</div>
     </div>
   `).join('');
+}
+
+// ========== NAVIGATION ==========
+function handleFormSubmit(event) {
+  event.preventDefault();
+  
+  // Let Netlify process the form
+  const form = event.target;
+  const formData = new FormData(form);
+  
+  fetch('/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams(formData)
+  })
+  .then(() => {
+    // Show success message
+    document.getElementById('formMessage').style.display = 'block';
+    form.reset();
+    // Hide message after 3 seconds
+    setTimeout(() => {
+      document.getElementById('formMessage').style.display = 'none';
+    }, 3000);
+  })
+  .catch(err => console.error('Form submission error:', err));
 }
 
 // ========== NAVIGATION ==========
