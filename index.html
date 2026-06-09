@@ -675,9 +675,44 @@ function showSection(id) {
   event.target.classList.add('active');
 }
 
+// ========== CSV PARSING ==========
+function parseCSV(csvText) {
+  const lines = csvText.trim().split('\n');
+  const headers = lines[0].split(',').map(h => h.trim());
+  
+  inventory = [];
+  for (let i = 1; i < lines.length; i++) {
+    const values = lines[i].split(',').map(v => v.trim());
+    if (values.length < 5) continue; // Skip malformed rows
+    
+    inventory.push({
+      id: values[0],
+      name: values[1],
+      category: values[2],
+      supplier: values[3],
+      price: parseFloat(values[4]) || 0
+    });
+  }
+}
+
+async function loadInventoryFromGitHub() {
+  try {
+    const response = await fetch('https://raw.githubusercontent.com/plutodx/kenjie-minimart/main/inventory.csv');
+    if (response.ok) {
+      const csv = await response.text();
+      parseCSV(csv);
+      renderFeaturedProducts();
+      renderPrices();
+    }
+  } catch (error) {
+    console.log('Could not load inventory from GitHub.');
+  }
+}
+
 // ========== INIT ==========
 document.addEventListener('DOMContentLoaded', () => {
   loadData();
+  loadInventoryFromGitHub(); // Fetch CSV from GitHub
   
   // Add default announcement if none exist
   if (announcements.length === 0) {
