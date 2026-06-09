@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kenjie Minimart — Admin</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #fafafa;
+      color: #333;
+      line-height: 1.6;
+    }
+    
+    .login-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #E5358B 0%, #BD2470 100%);
+    }
+    
+    .login-box {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      max-width: 400px;
+      width: 90%;
+    }
+    
+    .login-box h1 {
+      text-align: center;
+      color: #E5358B;
+      margin-bottom: 30px;
+      font-size: 28px;
+    }
+    
+    .login-box input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .login-box input:focus {
+      outline: none;
+      border-color: #E5358B;
+      box-shadow: 0 0 0 3px rgba(229, 53, 139, 0.1);
+    }
+    
+    .login-btn {
+      width: 100%;
+      padding: 12px;
+      background: #E5358B;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .login-btn:hover {
+      background: #BD2470;
+    }
+    
+    /* Admin Panel */
+    .admin-panel {
+      display: none;
+    }
+    
+    header {
+      background: white;
+      border-bottom: 1px solid #eee;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .brand {
+      font-size: 24px;
+      font-weight: 700;
+      color: #E5358B;
+    }
+    
+    .logout-btn {
+      background: #f0f0f0;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    
+    .logout-btn:hover {
+      background: #e0e0e0;
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 30px 20px;
+    }
+    
+    h2 {
+      font-size: 22px;
+      color: #E5358B;
+      margin-bottom: 20px;
+      margin-top: 30px;
+    }
+    
+    h2:first-child {
+      margin-top: 0;
+    }
+    
+    .section {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    
+    textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 14px;
+      resize: vertical;
+      margin-bottom: 10px;
+    }
+    
+    .btn {
+      background: #E5358B;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+    
+    .btn:hover {
+      background: #BD2470;
+    }
+    
+    .btn-delete {
+      background: #ffebee;
+      color: #c62828;
+    }
+    
+    .btn-delete:hover {
+      background: #ffcdd2;
+    }
+    
+    .announcement {
+      background: #f9f9f9;
+      padding: 15px;
+      border-left: 4px solid #E5358B;
+      margin-bottom: 15px;
+      border-radius: 4px;
+    }
+    
+    .announcement-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 12px;
+      color: #999;
+    }
+    
+    .announcement-content {
+      color: #444;
+      margin-bottom: 12px;
+      line-height: 1.6;
+    }
+    
+    .announcement-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .btn-small {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+    
+    input[type="file"] {
+      margin-bottom: 10px;
+    }
+    
+    .help-text {
+      font-size: 12px;
+      color: #999;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="loginScreen" class="login-container">
+  <div class="login-box">
+    <h1>🏪 Admin Access</h1>
+    <input type="password" id="passwordInput" placeholder="Enter admin password" onkeypress="if(event.key==='Enter') login()">
+    <button class="login-btn" onclick="login()">Login</button>
+  </div>
+</div>
+
+<!-- Admin Panel -->
+<div id="adminPanel" class="admin-panel">
+  <header>
+    <div class="brand">🏪 Kenjie Minimart — Admin</div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </header>
+
+  <div class="container">
+    
+    <h2>📢 Manage Announcements</h2>
+    
+    <div class="section">
+      <h3 style="margin-bottom: 15px; color: #333; font-size: 16px;">Add New Announcement</h3>
+      <textarea id="newAnnouncementText" placeholder="Type your announcement here..."></textarea>
+      <button class="btn" onclick="addAnnouncement()">Add Announcement</button>
+    </div>
+
+    <div class="section">
+      <h3 style="margin-bottom: 15px; color: #333; font-size: 16px;">Current Announcements</h3>
+      <div id="announcementsList"></div>
+    </div>
+
+    <h2>💾 Update Inventory</h2>
+    
+    <div class="section">
+      <h3 style="margin-bottom: 15px; color: #333; font-size: 16px;">Upload CSV</h3>
+      <input type="file" id="csvFile" accept=".csv" onchange="handleCsvUpload(event)">
+      <button class="btn" onclick="document.getElementById('csvFile').click()">Choose CSV File</button>
+      <p class="help-text">Export from your POS inventory tab and upload to update prices.</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ========== DATA STORAGE ==========
+let announcements = [];
+let inventory = [];
+let isLoggedIn = false;
+
+const PASSWORD = 'Thepowerofsix_13';
+
+function loadData() {
+  const saved = localStorage.getItem('kenjieMinimart');
+  if (saved) {
+    const data = JSON.parse(saved);
+    announcements = data.announcements || [];
+    inventory = data.inventory || [];
+  }
+}
+
+function saveData() {
+  localStorage.setItem('kenjieMinimart', JSON.stringify({
+    announcements,
+    inventory
+  }));
+}
+
+// ========== LOGIN ==========
+function login() {
+  const password = document.getElementById('passwordInput').value;
+  if (password === PASSWORD) {
+    isLoggedIn = true;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'block';
+    loadData();
+    renderAnnouncements();
+  } else {
+    alert('Incorrect password.');
+    document.getElementById('passwordInput').value = '';
+  }
+}
+
+function logout() {
+  if (confirm('Are you sure you want to log out?')) {
+    isLoggedIn = false;
+    document.getElementById('adminPanel').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('passwordInput').value = '';
+  }
+}
+
+// ========== ANNOUNCEMENTS ==========
+function renderAnnouncements() {
+  const list = document.getElementById('announcementsList');
+  
+  if (announcements.length === 0) {
+    list.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No announcements yet.</p>';
+    return;
+  }
+  
+  list.innerHTML = announcements.map((ann, idx) => `
+    <div class="announcement">
+      <div class="announcement-header">
+        <span>${new Date(ann.timestamp).toLocaleString('en-US', { 
+          month: 'short', 
+          day: 'numeric', 
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })}</span>
+      </div>
+      <div class="announcement-content">
+        ${ann.content.split('\n').join('<br>')}
+      </div>
+      <div class="announcement-actions">
+        <button class="btn btn-small" onclick="editAnnouncement(${idx})">Edit</button>
+        <button class="btn btn-small btn-delete" onclick="deleteAnnouncement(${idx})">Delete</button>
+      </div>
+      <div id="edit-form-${idx}" style="display: none; margin-top: 15px;">
+        <textarea id="edit-text-${idx}">${ann.content}</textarea>
+        <button class="btn" style="margin-right: 6px;" onclick="saveAnnouncement(${idx})">Save</button>
+        <button class="btn-small" style="background: #ddd; color: #666;" onclick="cancelEdit(${idx})">Cancel</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function editAnnouncement(idx) {
+  document.querySelectorAll('[id^="edit-form-"]').forEach(el => el.style.display = 'none');
+  document.getElementById(`edit-form-${idx}`).style.display = 'block';
+  document.getElementById(`edit-text-${idx}`).focus();
+}
+
+function saveAnnouncement(idx) {
+  const newContent = document.getElementById(`edit-text-${idx}`).value.trim();
+  if (newContent) {
+    announcements[idx].content = newContent;
+    announcements[idx].timestamp = new Date().toISOString();
+    saveData();
+    renderAnnouncements();
+  }
+}
+
+function cancelEdit(idx) {
+  document.getElementById(`edit-form-${idx}`).style.display = 'none';
+}
+
+function deleteAnnouncement(idx) {
+  if (confirm('Delete this announcement?')) {
+    announcements.splice(idx, 1);
+    saveData();
+    renderAnnouncements();
+  }
+}
+
+function addAnnouncement() {
+  const text = document.getElementById('newAnnouncementText').value.trim();
+  if (text) {
+    announcements.unshift({
+      content: text,
+      timestamp: new Date().toISOString()
+    });
+    document.getElementById('newAnnouncementText').value = '';
+    saveData();
+    renderAnnouncements();
+    alert('Announcement added!');
+  } else {
+    alert('Please type something first.');
+  }
+}
+
+// ========== INVENTORY ==========
+function handleCsvUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const csv = e.target.result;
+    parseCSV(csv);
+    saveData();
+    alert('Inventory updated!');
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function parseCSV(csv) {
+  const lines = csv.trim().split('\n');
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+  
+  inventory = [];
+  for (let i = 1; i < lines.length; i++) {
+    if (lines[i].trim() === '') continue;
+    
+    const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+    const obj = {};
+    headers.forEach((header, idx) => {
+      obj[header] = values[idx];
+    });
+    
+    if (obj.name && obj.price) {
+      inventory.push({
+        id: obj.id,
+        name: obj.name,
+        category: obj.category || 'Other',
+        price: parseFloat(obj.price) || 0
+      });
+    }
+  }
+}
+
+// ========== INIT ==========
+document.addEventListener('DOMContentLoaded', () => {
+  loadData();
+});
+</script>
+
+</body>
+</html>
