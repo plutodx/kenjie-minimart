@@ -402,7 +402,7 @@ function addAnnouncement() {
 }
 
 // ========== GITHUB CONFIG ==========
-const GITHUB_TOKEN = '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';
+const GITHUB_TOKEN = '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';
 const GITHUB_OWNER = 'plutodx';
 const GITHUB_REPO = 'kenjie-minimart';
 const GITHUB_BRANCH = 'main';
@@ -436,7 +436,10 @@ async function pushCsvToGitHub(csvContent) {
     // Get the current file SHA (needed for updates)
     const getResponse = await fetch(
       `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/inventory.csv`,
-      { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } }
+      { 
+        headers: { 'Authorization': `token ${GITHUB_TOKEN}` },
+        mode: 'cors'
+      }
     );
     
     let sha = null;
@@ -454,11 +457,12 @@ async function pushCsvToGitHub(csvContent) {
           'Authorization': `token ${GITHUB_TOKEN}`,
           'Content-Type': 'application/json'
         },
+        mode: 'cors',
         body: JSON.stringify({
           message: `Update inventory via admin panel - ${new Date().toLocaleString()}`,
-          content: btoa(csvContent), // Base64 encode
+          content: btoa(csvContent),
           branch: GITHUB_BRANCH,
-          ...(sha && { sha }) // Include SHA if file exists
+          ...(sha && { sha })
         })
       }
     );
@@ -466,12 +470,13 @@ async function pushCsvToGitHub(csvContent) {
     if (response.ok) {
       alert('✓ Inventory updated and synced to GitHub!');
     } else {
-      alert('Error syncing to GitHub. Check your token.');
-      console.error('GitHub push error:', await response.json());
+      const errorData = await response.json().catch(() => ({}));
+      console.error('GitHub error:', errorData);
+      alert('Error syncing to GitHub. Token may be expired or revoked. Try generating a new one.');
     }
   } catch (error) {
     console.error('GitHub sync failed:', error);
-    alert('Local update done, but GitHub sync failed. Your inventory.csv on GitHub may be outdated.');
+    alert('Local update done. GitHub sync failed — inventory.csv will need manual upload to GitHub.');
   }
 }
 
