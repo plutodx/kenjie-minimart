@@ -418,6 +418,9 @@
     <h2>📢 Latest News & Promos</h2>
     <div class="announcements" id="announcementsList"></div>
     
+    <h2 style="margin-top: 40px; color: #E5358B;">🌟 Star Product</h2>
+    <div id="starProduct" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;"></div>
+    
     <h2 style="margin-top: 40px;">⭐ Featured Products</h2>
     <div id="featuredProducts" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;"></div>
     <p style="text-align: center; margin-top: 20px;"><button onclick="showSection('prices')" style="background: #E5358B; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px;">Check all products and prices →</button></p>
@@ -515,6 +518,33 @@ function renderAnnouncements() {
       <div class="announcement-content">
         ${ann.content.split('\n').join('<br>')}
       </div>
+    </div>
+  `).join('');
+}
+
+// ========== STAR PRODUCT ==========
+function renderStarProduct() {
+  const starDiv = document.getElementById('starProduct');
+  
+  if (inventory.length === 0) {
+    starDiv.innerHTML = '';
+    return;
+  }
+  
+  // Get star products (star: 1)
+  let starProducts = inventory.filter(p => p.star === 1);
+  
+  if (starProducts.length === 0) {
+    starDiv.innerHTML = '';
+    return;
+  }
+  
+  starDiv.innerHTML = starProducts.map(p => `
+    <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 6px rgba(229, 53, 139, 0.15); text-align: center; border-top: 3px solid #E5358B;">
+      <div style="font-size: 20px; margin-bottom: 8px;">⭐</div>
+      <h3 style="font-size: 13px; color: #333; margin-bottom: 8px; line-height: 1.4;">${p.name}</h3>
+      <p style="font-size: 11px; color: #999; margin-bottom: 10px;">${p.category}</p>
+      <div style="font-size: 18px; font-weight: 700; color: #E5358B;">₱${p.price.toFixed(2)}</div>
     </div>
   `).join('');
 }
@@ -695,7 +725,8 @@ function parseCSV(csvText) {
       category: obj.category,
       supplier: obj.supplier,
       price: parseFloat(obj.price) || 0,
-      featured: parseInt(obj.featured) || 0
+      featured: parseInt(obj.featured) || 0,
+      star: parseInt(obj.star) || 0
     });
   }
 }
@@ -706,6 +737,7 @@ async function loadInventoryFromGitHub() {
     if (response.ok) {
       const csv = await response.text();
       parseCSV(csv);
+      renderStarProduct();
       renderFeaturedProducts();
       renderPrices();
     }
