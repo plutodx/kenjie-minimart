@@ -254,6 +254,18 @@
       <p class="help-text">Export from your POS inventory tab and upload to update prices.</p>
     </div>
 
+    <h2>🌟 Manage Star Product</h2>
+
+    <div class="section">
+      <h3 style="margin-bottom: 15px; color: #333; font-size: 16px;">Select Star Product</h3>
+      <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Choose up to 2 products to display as star products on the announcements tab.</p>
+      <input type="text" id="starProductSearch" placeholder="Search products..." onkeyup="filterStarProducts()" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; margin-bottom: 15px;">
+      <div id="starProductsList" style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+        <p style="text-align: center; color: #999;">Upload inventory first to manage star products.</p>
+      </div>
+      <button class="btn" onclick="saveStarProducts()" style="margin-top: 15px;">Save Star Product</button>
+    </div>
+
     <h2>⭐ Manage Featured Products</h2>
 
     <div class="section">
@@ -285,6 +297,7 @@ function loadData() {
     announcements = data.announcements || [];
     inventory = data.inventory || [];
     featuredProductIds = data.featuredProductIds || [];
+    starProductIds = data.starProductIds || [];
   }
 }
 
@@ -292,7 +305,8 @@ function saveData() {
   localStorage.setItem('kenjieMinimart', JSON.stringify({
     announcements,
     inventory,
-    featuredProductIds
+    featuredProductIds,
+    starProductIds
   }));
 }
 
@@ -305,6 +319,7 @@ function login() {
     document.getElementById('adminPanel').style.display = 'block';
     loadData();
     renderAnnouncements();
+    renderStarProductsList();
     renderFeaturedProductsList();
   } else {
     alert('Incorrect password.');
@@ -411,6 +426,7 @@ async function handleCsvUpload(event) {
     const csv = e.target.result;
     parseCSV(csv);
     saveData();
+    renderStarProductsList();
     renderFeaturedProductsList();
     alert('✓ Inventory updated locally!\n\nTo sync to the live site:\n1. Copy this CSV\n2. Upload to GitHub (replace inventory.csv)\n3. Site updates within 2-5 minutes');
     event.target.value = '';
@@ -437,13 +453,70 @@ function parseCSV(csv) {
         id: obj.id,
         name: obj.name,
         category: obj.category || 'Other',
-        price: parseFloat(obj.price) || 0
+        price: parseFloat(obj.price) || 0,
+        featured: parseInt(obj.featured) || 0,
+        star: parseInt(obj.star) || 0
       });
     }
   }
 }
 
 // ========== FEATURED PRODUCTS ==========
+// ========== STAR PRODUCTS ==========
+let starProductIds = [];
+
+function renderStarProductsList() {
+  const list = document.getElementById('starProductsList');
+  
+  if (inventory.length === 0) {
+    list.innerHTML = '<p style="text-align: center; color: #999;">Upload inventory first to manage star products.</p>';
+    return;
+  }
+  
+  list.innerHTML = inventory.map(p => `
+    <div style="padding: 10px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px;">
+      <input type="checkbox" id="star-${p.id}" ${starProductIds.includes(p.id) ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer;">
+      <label for="star-${p.id}" style="flex: 1; cursor: pointer; margin: 0;">
+        <div style="font-size: 13px; color: #333;">🌟 ${p.name}</div>
+        <div style="font-size: 11px; color: #999;">${p.category} — ₱${p.price.toFixed(2)}</div>
+      </label>
+    </div>
+  `).join('');
+}
+
+function saveStarProducts() {
+  starProductIds = [];
+  document.querySelectorAll('#starProductsList input[type="checkbox"]:checked').forEach(cb => {
+    const productId = cb.id.replace('star-', '');
+    starProductIds.push(productId);
+  });
+  
+  if (starProductIds.length > 2) {
+    alert('⚠️ Please select up to 2 star products only.');
+    return;
+  }
+  
+  saveData();
+  
+  // Update CSV with star flag
+  inventory.forEach(product => {
+    product.star = starProductIds.includes(product.id) ? 1 : 0;
+  });
+  
+  alert(`✓ ${starProductIds.length} product(s) marked as star!\n\nTo apply these changes to the live site:\n1. Export your updated CSV (with Star column)\n2. Upload to GitHub (replace inventory.csv)\n3. Site updates within 2-5 minutes`);
+}
+
+function filterStarProducts() {
+  const search = document.getElementById('starProductSearch').value.toLowerCase();
+  const checkboxes = document.querySelectorAll('#starProductsList div');
+  
+  checkboxes.forEach(checkbox => {
+    const text = checkbox.textContent.toLowerCase();
+    checkbox.style.display = text.includes(search) ? 'flex' : 'none';
+  });
+}
+
+
 function renderFeaturedProductsList() {
   const list = document.getElementById('featuredProductsList');
   
