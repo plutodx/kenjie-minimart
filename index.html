@@ -530,11 +530,10 @@ function renderFeaturedProducts() {
     return;
   }
   
-  // If no featured products selected, show first 6
-  let productsToShow = featuredProductIds.length > 0 
-    ? inventory.filter(p => featuredProductIds.includes(p.id))
-    : inventory.slice(0, 6);
+  // Get featured products (featured: 1)
+  let productsToShow = inventory.filter(p => p.featured === 1);
   
+  // If no featured products marked, show first 6
   if (productsToShow.length === 0) {
     productsToShow = inventory.slice(0, 6);
   }
@@ -678,19 +677,25 @@ function showSection(id) {
 // ========== CSV PARSING ==========
 function parseCSV(csvText) {
   const lines = csvText.trim().split('\n');
-  const headers = lines[0].split(',').map(h => h.trim());
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
   
   inventory = [];
   for (let i = 1; i < lines.length; i++) {
-    const values = lines[i].split(',').map(v => v.trim());
+    const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
     if (values.length < 5) continue; // Skip malformed rows
     
+    const obj = {};
+    headers.forEach((header, idx) => {
+      obj[header] = values[idx];
+    });
+    
     inventory.push({
-      id: values[0],
-      name: values[1],
-      category: values[2],
-      supplier: values[3],
-      price: parseFloat(values[4]) || 0
+      id: obj.id,
+      name: obj.name,
+      category: obj.category,
+      supplier: obj.supplier,
+      price: parseFloat(obj.price) || 0,
+      featured: parseInt(obj.featured) || 0
     });
   }
 }
@@ -709,24 +714,10 @@ async function loadInventoryFromGitHub() {
   }
 }
 
-async function loadFeaturedFromGitHub() {
-  try {
-    const response = await fetch('https://raw.githubusercontent.com/plutodx/kenjie-minimart/main/featured.json');
-    if (response.ok) {
-      const data = await response.json();
-      featuredProductIds = data.featuredProductIds || [];
-      renderFeaturedProducts();
-    }
-  } catch (error) {
-    console.log('Using default featured products.');
-  }
-}
-
 // ========== INIT ==========
 document.addEventListener('DOMContentLoaded', () => {
   loadData();
   loadInventoryFromGitHub(); // Fetch CSV from GitHub
-  loadFeaturedFromGitHub(); // Fetch featured products from GitHub
   
   // Add default announcement if none exist
   if (announcements.length === 0) {
