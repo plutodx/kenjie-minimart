@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kenjie Minimart — Open 24/7</title>
+  <link rel="icon" type="image/png" href="favicon.png">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
@@ -419,6 +420,7 @@
     
     <h2 style="margin-top: 40px;">⭐ Featured Products</h2>
     <div id="featuredProducts" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;"></div>
+    <p style="text-align: center; margin-top: 20px;"><button onclick="showSection('prices')" style="background: #E5358B; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px;">Check all products and prices →</button></p>
   </section>
 
   <!-- Price Lookup Section -->
@@ -476,6 +478,7 @@ function loadData() {
     const data = JSON.parse(saved);
     announcements = data.announcements || [];
     inventory = data.inventory || [];
+    featuredProductIds = data.featuredProductIds || [];
   }
   renderAnnouncements();
   renderFeaturedProducts();
@@ -484,7 +487,8 @@ function loadData() {
 function saveData() {
   localStorage.setItem('kenjieMinimart', JSON.stringify({
     announcements,
-    inventory
+    inventory,
+    featuredProductIds
   }));
 }
 
@@ -516,6 +520,8 @@ function renderAnnouncements() {
 }
 
 // ========== FEATURED PRODUCTS ==========
+let featuredProductIds = [];
+
 function renderFeaturedProducts() {
   const featuredDiv = document.getElementById('featuredProducts');
   
@@ -524,11 +530,16 @@ function renderFeaturedProducts() {
     return;
   }
   
-  // Show random 6 products or all if less than 6
-  const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5);
-  const featured = shuffle(inventory).slice(0, 6);
+  // If no featured products selected, show first 6
+  let productsToShow = featuredProductIds.length > 0 
+    ? inventory.filter(p => featuredProductIds.includes(p.id))
+    : inventory.slice(0, 6);
   
-  featuredDiv.innerHTML = featured.map(p => `
+  if (productsToShow.length === 0) {
+    productsToShow = inventory.slice(0, 6);
+  }
+  
+  featuredDiv.innerHTML = productsToShow.map(p => `
     <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); text-align: center;">
       <h3 style="font-size: 13px; color: #333; margin-bottom: 8px; line-height: 1.4;">${p.name}</h3>
       <p style="font-size: 11px; color: #999; margin-bottom: 10px;">${p.category}</p>
