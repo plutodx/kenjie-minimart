@@ -401,21 +401,78 @@ function addAnnouncement() {
   }
 }
 
+// ========== GITHUB CONFIG ==========
+const GITHUB_TOKEN = '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';
+const GITHUB_OWNER = 'plutodx';
+const GITHUB_REPO = 'kenjie-minimart';
+const GITHUB_BRANCH = 'main';
+
 // ========== INVENTORY ==========
-function handleCsvUpload(event) {
+async function handleCsvUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
   
   const reader = new FileReader();
-  reader.onload = (e) => {
+  reader.onload = async (e) => {
     const csv = e.target.result;
     parseCSV(csv);
     saveData();
     renderFeaturedProductsList();
-    alert('Inventory updated!');
+    
+    // Push to GitHub
+    if (GITHUB_TOKEN !== 'YOUR_GITHUB_TOKEN_HERE') {
+      await pushCsvToGitHub(csv);
+    } else {
+      alert('Inventory updated locally. Set your GitHub token in the code to auto-sync.');
+    }
+    
     event.target.value = '';
   };
   reader.readAsText(file);
+}
+
+async function pushCsvToGitHub(csvContent) {
+  try {
+    // Get the current file SHA (needed for updates)
+    const getResponse = await fetch(
+      `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/inventory.csv`,
+      { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } }
+    );
+    
+    let sha = null;
+    if (getResponse.ok) {
+      const data = await getResponse.json();
+      sha = data.sha;
+    }
+    
+    // Push the file
+    const response = await fetch(
+      `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/inventory.csv`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': `token ${GITHUB_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: `Update inventory via admin panel - ${new Date().toLocaleString()}`,
+          content: btoa(csvContent), // Base64 encode
+          branch: GITHUB_BRANCH,
+          ...(sha && { sha }) // Include SHA if file exists
+        })
+      }
+    );
+    
+    if (response.ok) {
+      alert('✓ Inventory updated and synced to GitHub!');
+    } else {
+      alert('Error syncing to GitHub. Check your token.');
+      console.error('GitHub push error:', await response.json());
+    }
+  } catch (error) {
+    console.error('GitHub sync failed:', error);
+    alert('Local update done, but GitHub sync failed. Your inventory.csv on GitHub may be outdated.');
+  }
 }
 
 function parseCSV(csv) {
