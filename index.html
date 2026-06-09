@@ -674,25 +674,24 @@ function filterProducts() {
 function handleFormSubmit(event) {
   event.preventDefault();
   
-  // Let Netlify process the form
   const form = event.target;
   const formData = new FormData(form);
   
+  // Add form name for Netlify
+  formData.append('form-name', 'contact');
+  
   fetch('/', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams(formData)
   })
   .then(() => {
-    // Show success message
     document.getElementById('formMessage').style.display = 'block';
     form.reset();
-    // Hide message after 3 seconds
     setTimeout(() => {
       document.getElementById('formMessage').style.display = 'none';
-    }, 3000);
+    }, 4000);
   })
-  .catch(err => console.error('Form submission error:', err));
+  .catch(err => console.error('Error:', err));
 }
 
 // ========== NAVIGATION ==========
