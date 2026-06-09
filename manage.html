@@ -520,7 +520,7 @@ function renderFeaturedProductsList() {
   `).join('');
 }
 
-function saveFeaturedProducts() {
+async function saveFeaturedProducts() {
   featuredProductIds = [];
   document.querySelectorAll('#featuredProductsList input[type="checkbox"]:checked').forEach(cb => {
     const productId = cb.id.replace('featured-', '');
@@ -528,7 +528,58 @@ function saveFeaturedProducts() {
   });
   
   saveData();
-  alert(`${featuredProductIds.length} products marked as featured!`);
+  
+  // Push featured products to GitHub
+  if (GITHUB_TOKEN !== 'YOUR_GITHUB_TOKEN_HERE') {
+    await pushFeaturedToGitHub(featuredProductIds);
+  } else {
+    alert(`${featuredProductIds.length} products marked as featured!\n\nNote: GitHub sync disabled. Featured products will only show locally.`);
+  }
+}
+
+async function pushFeaturedToGitHub(featuredIds) {
+  try {
+    const jsonContent = JSON.stringify({ featuredProductIds: featuredIds }, null, 2);
+    
+    // Get current file SHA if it exists
+    const getResponse = await fetch(
+      `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/featured.json`,
+      { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } }
+    );
+    
+    let sha = null;
+    if (getResponse.ok) {
+      const data = await getResponse.json();
+      sha = data.sha;
+    }
+    
+    // Push the file
+    const response = await fetch(
+      `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/featured.json`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': `token ${GITHUB_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: `Update featured products via admin panel - ${new Date().toLocaleString()}`,
+          content: btoa(jsonContent), // Base64 encode
+          branch: GITHUB_BRANCH,
+          ...(sha && { sha })
+        })
+      }
+    );
+    
+    if (response.ok) {
+      alert(`✓ ${featuredProductIds.length} products marked as featured and synced to GitHub!`);
+    } else {
+      alert(`✓ ${featuredProductIds.length} products marked as featured locally.\n\nGitHub sync failed — check your token.`);
+    }
+  } catch (error) {
+    console.error('GitHub sync error:', error);
+    alert(`✓ Featured products saved locally.\n\nGitHub sync failed.`);
+  }
 }
 
 function filterFeaturedProducts() {
