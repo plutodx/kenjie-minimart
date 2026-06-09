@@ -709,10 +709,24 @@ async function loadInventoryFromGitHub() {
   }
 }
 
+async function loadFeaturedFromGitHub() {
+  try {
+    const response = await fetch('https://raw.githubusercontent.com/plutodx/kenjie-minimart/main/featured.json');
+    if (response.ok) {
+      const data = await response.json();
+      featuredProductIds = data.featuredProductIds || [];
+      renderFeaturedProducts();
+    }
+  } catch (error) {
+    console.log('Using default featured products.');
+  }
+}
+
 // ========== INIT ==========
 document.addEventListener('DOMContentLoaded', () => {
   loadData();
   loadInventoryFromGitHub(); // Fetch CSV from GitHub
+  loadFeaturedFromGitHub(); // Fetch featured products from GitHub
   
   // Add default announcement if none exist
   if (announcements.length === 0) {
